@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamRecomenda</title>
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="StreamRec">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -797,6 +802,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await carregarIdioma(currentLang);
             buildLangSelector();
+            registrarPwa();
         });
 
         async function carregarIdioma(lang) {
@@ -1211,6 +1217,13 @@
             document.getElementById('empty').classList.add('active');
             document.getElementById('btnNovaRec').style.display = 'none';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- PWA ---
+        function registrarPwa() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+            }
         }
 
         // Keyboard shortcut
