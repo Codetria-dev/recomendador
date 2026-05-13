@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamRecomenda</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131a;
+            --surface-hover: #1c1c26;
+            --border: #1e1e2a;
+            --text: #e4e4e7;
+            --text-muted: #71717a;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --accent-light: rgba(139, 92, 246, 0.15);
+            --gradient: linear-gradient(135deg, #8b5cf6, #ec4899);
+            --card-bg: #181820;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        /* Header */
+        header {
+            padding: 32px 0 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo span { font-size: 14px; color: var(--text-muted); font-weight: 400; display: block; }
+
+        /* Language Selector */
+        .lang-selector {
+            position: relative;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .lang-btn-current {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .lang-btn-current:hover {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+
+        .lang-btn-current .arrow {
+            font-size: 10px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .lang-btn-current.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            min-width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px;
+            opacity: 0;
+            transform: translateY(-4px);
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .lang-dropdown.open {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .lang-option {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 7px 14px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .lang-option:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .lang-option.active {
+            color: var(--accent);
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .hero h2 {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        /* Filters */
+        .filters {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 32px;
+            margin-bottom: 32px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .filter-group .select-wrap { position: relative; }
+
+        .filter-group select {
+            width: 100%;
+            padding: 12px 36px 12px 14px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            appearance: none;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .filter-group select:hover { border-color: var(--accent); }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .select-wrap::after {
+            content: ">";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%) rotate(90deg);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .filter-group select option {
+            background: var(--card-bg);
+            color: var(--text);
+            font-weight: 400;
+        }
+
+        .btn-recommend {
+            grid-column: 1 / -1;
+            margin-top: 8px;
+            padding: 14px 32px;
+            background: var(--gradient);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-recommend:hover { opacity: 0.9; }
+        .btn-recommend:active { transform: scale(0.98); }
+        .btn-recommend:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 0;
+        }
+
+        .loading.active { display: block; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading p { color: var(--text-muted); font-size: 14px; }
+
+        /* Active Filters */
+        .active-filters {
+            display: none;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .active-filters.active { display: flex; }
+
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: var(--accent-light);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a78bfa;
+        }
+
+        /* Results */
+        .results { display: none; }
+        .results.active { display: block; }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .results-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .results-header .count {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            gap: 18px;
+            padding: 0;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .card-poster {
+            flex-shrink: 0;
+            width: 140px;
+            min-height: 210px;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-poster .no-poster {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 8px;
+        }
+
+        .card-body {
+            flex: 1;
+            padding: 18px 18px 18px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+            line-height: 1.3;
+            flex: 1;
+        }
+
+        .card-year {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: var(--surface);
+            padding: 3px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .card-genre {
+            font-size: 12px;
+            color: #a78bfa;
+            background: var(--accent-light);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .card-rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--surface);
+        }
+
+        .card-rating.ia { color: #fbbf24; }
+        .card-rating.tmdb { color: #22d3ee; }
+        .card-rating.trakt { color: #ed64a6; }
+
+        .card-synopsis {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .card-highlight {
+            font-size: 13px;
+            color: #a78bfa;
+            font-style: italic;
+            padding: 10px 12px;
+            background: var(--accent-light);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--accent);
+        }
+
+        .card-tmdb-link {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .card-tmdb-link:hover {
+            color: #22d3ee;
+        }
+
+        .card-crew {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .card-crew span { color: var(--text); font-weight: 500; }
+
+        .card-trailer-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #f87171;
+            text-decoration: none;
+            padding: 4px 12px;
+            background: rgba(248, 113, 113, 0.1);
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .card-trailer-btn:hover { background: rgba(248, 113, 113, 0.2); }
+
+        .card-providers {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .card-providers .provider-badge {
+            font-size: 12px;
+            padding: 2px 8px;
+            background: var(--surface);
+            border-radius: 4px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .card-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .card-action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .card-action-btn.favorited {
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .card-action-btn.favorited::before { content: ""; }
+
+        .results-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--surface-hover);
+        }
+
+        .copy-feedback {
+            font-size: 12px;
+            color: #22c55e;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copy-feedback.show { opacity: 1; }
+
+        @media (max-width: 600px) {
+            .card { flex-direction: column; }
+            .card-poster {
+                width: 100%;
+                min-height: 180px;
+                max-height: 220px;
+            }
+            .card-body { padding: 0 14px 14px; }
+        }
+
+        /* Error */
+        .error {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius);
+            margin-top: 20px;
+        }
+
+        .error.active { display: block; }
+        .error p { color: #fca5a5; font-size: 15px; }
+        .error .error-icon { font-size: 32px; margin-bottom: 12px; }
+
+        /* Empty state */
+        .empty {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty.active { display: block; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty h3 { font-size: 20px; margin-bottom: 8px; }
+        .empty p { color: var(--text-muted); font-size: 14px; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 48px 0 32px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 48px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .hero h2 { font-size: 22px; }
+            .hero p { font-size: 15px; }
+            header { padding: 20px 0 16px; }
+            .logo h1 { font-size: 18px; }
+            .card-poster { min-height: 160px; max-height: 200px; }
+            .filters { padding: 16px; }
+            .results-grid { gap: 12px; }
+        }
+
+        @media (max-width: 768px) {
+            .filter-grid { grid-template-columns: 1fr; gap: 12px; }
+            .results-grid { grid-template-columns: 1fr; }
+            .hero h2 { font-size: 26px; }
+            header .container { flex-direction: column; align-items: flex-start; }
+            .filters { padding: 20px; }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .results-grid { grid-template-columns: 1fr 1fr; }
+            .card-poster { width: 110px; min-height: 165px; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 0 16px; }
+        }
+
+        @media (min-width: 769px) and (max-width: 1100px) {
+            .filter-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">
+                <div class="logo-icon">SR</div>
+                <div>
+                    <h1>StreamRecomenda</h1>
+                    <span data-i18n="logo_subtitle">Recomendacoes inteligentes para seu streaming</span>
+                </div>
+            </a>
+            <div class="lang-selector" id="langSelector">
+                <button class="lang-btn-current" id="langCurrent">
+                    <span id="langCurrentText">PT</span>
+                    <span class="arrow">▼</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h2 data-i18n="hero_title">O que assistir hoje?</h2>
+            <p data-i18n="hero_desc">Escolha seu servico de streaming, o tipo de conteudo e o criterio. Nossa IA recomenda os melhores titulos para voce.</p>
+        </section>
+
+        <section class="filters">
+            <form id="filterForm" class="filter-grid">
+                <div class="filter-group">
+                    <label for="streaming" data-i18n="label_streaming">Servico de Streaming</label>
+                    <div class="select-wrap">
+                        <select id="streaming" required>
+                            <option value="" data-i18n-placeholder="select_placeholder">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="tipo" data-i18n="label_tipo">Tipo de Conteudo</label>
+                    <div class="select-wrap">
+                        <select id="tipo" required>
+                            <option value="" data-i18n-placeholder="select_placeholder">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="criterio" data-i18n="label_criterio">Criterio</label>
+                    <div class="select-wrap">
+                        <select id="criterio" required>
+                            <option value="" data-i18n-placeholder="select_placeholder">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="genero" data-i18n="label_genero">Genero</label>
+                    <div class="select-wrap">
+                        <select id="genero">
+                            <option value="" data-i18n-placeholder="select_placeholder">Selecione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-recommend" id="btnRecommend" data-i18n="btn_recommend">
+                    Recomendar
+                </button>
+            </form>
+        </section>
+
+        <div class="active-filters" id="activeFilters"></div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p data-i18n="loading_text">Consultando a inteligencia artificial...</p>
+        </div>
+
+        <section class="results" id="results">
+            <div class="results-toolbar">
+                <div class="results-header" style="margin-bottom:0;flex:1">
+                    <h3 id="resultsTitle">Recomendacoes</h3>
+                    <span class="count" id="resultsCount"></span>
+                </div>
+                <button class="btn-outline" id="btnNovaRec" onclick="novaRecomendacao()" data-i18n="btn_nova_recomendacao" style="display:none">Nova recomendacao</button>
+            </div>
+            <div class="results-grid" id="resultsGrid"></div>
+        </section>
+
+        <div class="error" id="error">
+            <div class="error-icon">!</div>
+            <p id="errorMessage"></p>
+        </div>
+
+        <div class="empty" id="empty">
+            <div class="empty-icon">*</div>
+            <h3 data-i18n="empty_title">Pronto para descobrir algo novo?</h3>
+            <p data-i18n="empty_desc">Selecione suas preferencias e clique em Recomendar.</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p data-i18n="footer">StreamRecomenda -- Recomendacoes inteligentes com Google Gemini</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- i18n System ---
+        let currentLang = localStorage.getItem('lang') || 'pt';
+        let ui = {};
+        let config = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await carregarIdioma(currentLang);
+            buildLangSelector();
+        });
+
+        async function carregarIdioma(lang) {
+            try {
+                const res = await fetch('/dados?lang=' + lang);
+                const data = await res.json();
+
+                currentLang = data.lingua_atual;
+                ui = data.ui || {};
+                config = data;
+
+                localStorage.setItem('lang', currentLang);
+
+                translateUI();
+                populateSelects();
+                updateLangSelector();
+
+                document.getElementById('empty').classList.add('active');
+
+            } catch (err) {
+                console.error('Erro ao carregar idioma:', err);
+            }
+        }
+
+        function _(key, fallback) {
+            return ui[key] || fallback || key;
+        }
+
+        function translateUI() {
+            // data-i18n elements (text content)
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                const text = _(key, el.textContent);
+                el.textContent = text;
+            });
+
+            // data-i18n-placeholder elements (placeholder attribute)
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                const text = _(key, el.getAttribute('placeholder') || '');
+                el.setAttribute('placeholder', text);
+                // Also update the option text
+                el.textContent = text;
+            });
+
+            // Page title
+            document.title = _('site_title', 'StreamRecomenda');
+        }
+
+        function populateSelects() {
+            populateSelect('streaming', config.streamings);
+            populateSelect('tipo', config.tipos);
+            populateSelect('criterio', config.criterios);
+            populateSelect('genero', config.generos);
+        }
+
+        function populateSelect(id, items) {
+            const select = document.getElementById(id);
+            const placeholderText = _('select_placeholder', 'Select...');
+
+            // Keep the placeholder option, update its text
+            const placeholder = select.querySelector('option[value=""]');
+            if (placeholder) {
+                placeholder.textContent = placeholderText;
+            }
+
+            // Remove old options (keep placeholder)
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // Add new options
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.nome;
+                select.appendChild(option);
+            });
+        }
+
+        // --- Language Selector ---
+        function buildLangSelector() {
+            const languages = config.linguas || [
+                { id: 'pt', nome: 'Portugues' },
+                { id: 'en', nome: 'English' },
+                { id: 'fr', nome: 'Francais' },
+                { id: 'zh', nome: '中文' }
+            ];
+
+            const dropdown = document.getElementById('langDropdown');
+            dropdown.innerHTML = '';
+
+            languages.forEach(lang => {
+                const btn = document.createElement('button');
+                btn.className = 'lang-option' + (lang.id === currentLang ? ' active' : '');
+                btn.textContent = lang.nome;
+                btn.dataset.lang = lang.id;
+                btn.addEventListener('click', () => {
+                    switchLanguage(lang.id);
+                    closeLangDropdown();
+                });
+                dropdown.appendChild(btn);
+            });
+
+            // Toggle dropdown on button click
+            document.getElementById('langCurrent').addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleLangDropdown();
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                const selector = document.getElementById('langSelector');
+                if (!selector.contains(e.target)) {
+                    closeLangDropdown();
+                }
+            });
+
+            updateLangCurrentText();
+        }
+
+        function toggleLangDropdown() {
+            const btn = document.getElementById('langCurrent');
+            const dropdown = document.getElementById('langDropdown');
+            const isOpen = dropdown.classList.toggle('open');
+            btn.classList.toggle('open', isOpen);
+        }
+
+        function closeLangDropdown() {
+            document.getElementById('langCurrent').classList.remove('open');
+            document.getElementById('langDropdown').classList.remove('open');
+        }
+
+        function updateLangCurrentText() {
+            const languages = config.linguas || [
+                { id: 'pt', nome: 'Portugues' },
+                { id: 'en', nome: 'English' },
+                { id: 'fr', nome: 'Francais' },
+                { id: 'zh', nome: '中文' }
+            ];
+            const lang = languages.find(l => l.id === currentLang);
+            document.getElementById('langCurrentText').textContent = lang ? lang.nome : currentLang;
+        }
+
+        function updateLangSelector() {
+            document.querySelectorAll('.lang-option').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.lang === currentLang);
+            });
+            updateLangCurrentText();
+        }
+
+        async function switchLanguage(lang) {
+            if (lang === currentLang) return;
+
+            // Clear results
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('resultsGrid').innerHTML = '';
+            document.getElementById('activeFilters').classList.remove('active');
+            document.getElementById('loading').classList.remove('active');
+
+            await carregarIdioma(lang);
+        }
+
+        // --- Form Submit ---
+        document.getElementById('filterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await recomendar();
+        });
+
+        async function recomendar() {
+            const streaming = document.getElementById('streaming').value;
+            const tipo = document.getElementById('tipo').value;
+            const criterio = document.getElementById('criterio').value;
+            const genero = document.getElementById('genero').value;
+
+            if (!streaming || !tipo || !criterio) return;
+
+            const btn = document.getElementById('btnRecommend');
+            btn.disabled = true;
+            btn.textContent = _('btn_recommending', 'Recommending...');
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('empty').classList.remove('active');
+
+            // Active filters
+            const streamName = document.getElementById('streaming').selectedOptions[0].text;
+            const tipoName = document.getElementById('tipo').selectedOptions[0].text;
+            const criterioName = document.getElementById('criterio').selectedOptions[0].text;
+            const generoName = genero ? document.getElementById('genero').selectedOptions[0].text : '';
+
+            const af = document.getElementById('activeFilters');
+            af.innerHTML = `
+                <span class="filter-tag">${streamName}</span>
+                <span class="filter-tag">${tipoName}</span>
+                <span class="filter-tag">${criterioName}</span>
+                ${generoName ? `<span class="filter-tag">${generoName}</span>` : ''}
+            `;
+            af.classList.add('active');
+
+            try {
+                const res = await fetch('/recomendar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        streaming, tipo, criterio, genero,
+                        quantidade: 8,
+                        lang: currentLang
+                    })
+                });
+
+                const data = await res.json();
+                document.getElementById('loading').classList.remove('active');
+
+                if (!res.ok || data.erro) {
+                    mostrarErro(data.erro || _('error_default', 'Error generating recommendations'));
+                    return;
+                }
+
+                if (data.resultados && data.resultados.length > 0) {
+                    mostrarResultados(data.resultados, data.filtros);
+                } else {
+                    mostrarErro(_('error_empty', 'No results found for these criteria.'));
+                }
+
+            } catch (err) {
+                document.getElementById('loading').classList.remove('active');
+                mostrarErro(_('error_connection', 'Connection error: {msg}').replace('{msg}', err.message));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = _('btn_recommend', 'Recommend');
+            }
+        }
+
+        function mostrarResultados(resultados, filtros) {
+            const section = document.getElementById('results');
+            const title = document.getElementById('resultsTitle');
+            const grid = document.getElementById('resultsGrid');
+            const count = document.getElementById('resultsCount');
+
+            title.textContent = _('results_title', 'Recommendations {streaming} -- {tipo}')
+                .replace('{streaming}', filtros.streaming)
+                .replace('{tipo}', filtros.tipo);
+
+            count.textContent = _('results_count', '{n} results')
+                .replace('{n}', resultados.length);
+
+            // Show "new recommendation" button
+            document.getElementById('btnNovaRec').style.display = 'inline-flex';
+
+            // Save to history
+            salvarHistorico(resultados, filtros);
+
+            grid.innerHTML = '';
+            resultados.forEach(item => {
+                const nota = item.nota || 0;
+                const tmdbNota = item.tmdb_nota;
+                const traktNota = item.trakt_nota;
+                const traktVotos = item.trakt_votos;
+                const genreFallback = _('genre_fallback', 'Various');
+
+                const posterHtml = item.tmdb_poster
+                    ? `<img src="${item.tmdb_poster}" alt="${item.titulo}" loading="lazy">`
+                    : `<span class="no-poster">${_('label_sem_poster', 'No image')}</span>`;
+
+                const tmdbRatingHtml = tmdbNota
+                    ? `<span class="card-rating tmdb">TMDB ${tmdbNota.toFixed(1)}</span>`
+                    : '';
+
+                const traktRatingHtml = traktNota
+                    ? `<span class="card-rating trakt">${_('label_nota_trakt', 'Trakt')} ${traktNota.toFixed(1)} <span style="font-weight:400;font-size:11px;color:var(--text-muted)">(${traktVotos} ${_('label_votos_trakt', 'votes')})</span></span>`
+                    : '';
+
+                const directorHtml = item.tmdb_diretor
+                    ? `<div class="card-crew"><span>${_('label_diretor', 'Director')}:</span> ${item.tmdb_diretor}</div>`
+                    : '';
+
+                const castHtml = item.tmdb_elenco && item.tmdb_elenco.length
+                    ? `<div class="card-crew"><span>${_('label_elenco', 'Cast')}:</span> ${item.tmdb_elenco.map(a => a.nome).slice(0, 3).join(', ')}</div>`
+                    : '';
+
+                const trailerHtml = item.tmdb_trailer
+                    ? `<a href="https://www.youtube.com/watch?v=${item.tmdb_trailer}" target="_blank" rel="noopener" class="card-trailer-btn">▶ ${_('label_trailer', 'Trailer')}</a>`
+                    : '';
+
+                const providersHtml = item.tmdb_provedores && item.tmdb_provedores.length
+                    ? `<div class="card-providers"><span>${_('label_onde_assistir', 'Where to watch')}:</span> ${item.tmdb_provedores.map(p => `<span class="provider-badge">${p.nome}</span>`).join(' ')}</div>`
+                    : '';
+
+                const tmdbLinkHtml = item.tmdb_url
+                    ? `<a href="${item.tmdb_url}" target="_blank" rel="noopener" class="card-tmdb-link">${_('label_ver_tmdb', 'View on TMDB')} →</a>`
+                    : '';
+
+                const traktLinkHtml = item.trakt_url
+                    ? `<a href="${item.trakt_url}" target="_blank" rel="noopener" class="card-tmdb-link">${_('label_ver_trakt', 'View on Trakt')} →</a>`
+                    : '';
+
+                const isFav = verificarFavorito(item.titulo, item.ano);
+                const favBtnClass = isFav ? 'card-action-btn favorited' : 'card-action-btn';
+                const favText = isFav ? _('label_remover_favoritos', 'Remove') : _('label_favoritar', 'Favorite');
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.titulo = item.titulo;
+                card.dataset.ano = item.ano;
+                card.innerHTML = `
+                    <div class="card-poster">${posterHtml}</div>
+                    <div class="card-body">
+                        <div class="card-header">
+                            <div class="card-title">${item.titulo}</div>
+                            <span class="card-year">${item.ano || '--'}</span>
+                        </div>
+                        <div class="card-meta">
+                            <span class="card-genre">${item.genero || genreFallback}</span>
+                            <span class="card-rating ia">${_('label_nota_ia', 'AI')} ${nota.toFixed(1)}</span>
+                            ${tmdbRatingHtml}
+                            ${traktRatingHtml}
+                        </div>
+                        <p class="card-synopsis">${item.sinopse || ''}</p>
+                        ${item.destaque ? `<div class="card-highlight">${item.destaque}</div>` : ''}
+                        ${directorHtml}
+                        ${castHtml}
+                        ${trailerHtml || providersHtml ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">${trailerHtml}${providersHtml}</div>` : ''}
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+                            ${tmdbLinkHtml}
+                            ${traktLinkHtml}
+                        </div>
+                        <div class="card-actions">
+                            <button class="${favBtnClass}" onclick="toggleFavorito(this, '${item.titulo.replace(/'/g, "\\'")}', '${item.ano || ''}', '${item.tmdb_poster || ''}')">${favText}</button>
+                            <button class="card-action-btn" onclick="compartilhar('${item.titulo.replace(/'/g, "\\'")}', ${item.ano || 0}, '${item.sinopse ? item.sinopse.replace(/'/g, "\\'").replace(/\n/g, ' ') : ''}')">${_('label_compartilhar', 'Share')}</button>
+                            <span class="copy-feedback" id="copyFeedback">${_('label_compartilhado', 'Copied!')}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            section.classList.add('active');
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function mostrarErro(msg) {
+            const errorDiv = document.getElementById('error');
+            document.getElementById('errorMessage').textContent = msg;
+            errorDiv.classList.add('active');
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // --- Share ---
+        function compartilhar(titulo, ano, sinopse) {
+            const text = `*${titulo}* (${ano || '--'})\n${sinopse || ''}\n\nRecomendado por StreamRecomenda`;
+            navigator.clipboard.writeText(text).then(() => {
+                const fb = document.getElementById('copyFeedback');
+                if (fb) { fb.classList.add('show'); setTimeout(() => fb.classList.remove('show'), 2000); }
+            });
+        }
+
+        // --- Favorites (localStorage) ---
+        function getFavoritos() {
+            try { return JSON.parse(localStorage.getItem('streamrecomenda_favoritos') || '[]'); }
+            catch { return []; }
+        }
+
+        function salvarFavoritos(lista) {
+            localStorage.setItem('streamrecomenda_favoritos', JSON.stringify(lista));
+        }
+
+        function verificarFavorito(titulo, ano) {
+            return getFavoritos().some(f => f.titulo === titulo && String(f.ano) === String(ano));
+        }
+
+        function toggleFavorito(btn, titulo, ano, poster) {
+            let favs = getFavoritos();
+            const idx = favs.findIndex(f => f.titulo === titulo && String(f.ano) === String(ano));
+            if (idx >= 0) {
+                favs.splice(idx, 1);
+                btn.textContent = _('label_favoritar', 'Favorite');
+                btn.classList.remove('favorited');
+            } else {
+                favs.push({ titulo, ano, poster, timestamp: Date.now() });
+                btn.textContent = _('label_remover_favoritos', 'Remove');
+                btn.classList.add('favorited');
+            }
+            salvarFavoritos(favs);
+        }
+
+        // --- History (localStorage) ---
+        function salvarHistorico(resultados, filtros) {
+            let hist = [];
+            try { hist = JSON.parse(localStorage.getItem('streamrecomenda_historico') || '[]'); }
+            catch { /* ignore */ }
+            hist.unshift({
+                timestamp: Date.now(),
+                filtros: filtros,
+                total: resultados.length,
+                titulos: resultados.map(r => r.titulo),
+            });
+            // Keep last 20
+            if (hist.length > 20) hist = hist.slice(0, 20);
+            localStorage.setItem('streamrecomenda_historico', JSON.stringify(hist));
+        }
+
+        // --- New Recommendation ---
+        function novaRecomendacao() {
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('resultsGrid').innerHTML = '';
+            document.getElementById('activeFilters').classList.remove('active');
+            document.getElementById('loading').classList.remove('active');
+            document.getElementById('empty').classList.add('active');
+            document.getElementById('btnNovaRec').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Keyboard shortcut
+        document.querySelectorAll('select').forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') document.getElementById('filterForm').requestSubmit();
+            });
+        });
+    </script>
+</body>
+</html>
