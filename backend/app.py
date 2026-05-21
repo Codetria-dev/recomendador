@@ -6,10 +6,13 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import time
 import traceback
+from collections import defaultdict
 from typing import Any
 
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify, Response
 
 from src.gemini_client import GeminiClient, STREAMINGS, TIPOS_CONTEUDO, CRITERIOS
@@ -23,6 +26,8 @@ from src.i18n import (
     supported_languages,
 )
 
+load_dotenv()
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -30,6 +35,70 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# --- Security: request size limit (1MB) ---
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
+
+# --- Rate limiting (simple in-memory per-IP) ---
+_RATE_LIMIT_WINDOW = 60       # 60 seconds
+_RATE_LIMIT_MAX = 30          # max requests per window
+_RATE_LIMIT_BURST = 60        # max burst
+_requests: dict[str, list[float]] = defaultdict(list)
+
+# --- CORS origins permitidos ---
+CORS_ORIGINS = os.getenv('CORS_ORIGINS', '*').split(',')
+# Em producao, configure via env: CORS_ORIGINS=https://meu-site.vercel.app,https://meu-dominio.com
+
+
+def _check_rate_limit(ip: str) -> bool:
+    """Verifica se o IP excedeu o limite de requisicoes."""
+    now = time.time()
+    window_start = now - _RATE_LIMIT_WINDOW
+
+    # Limpar entradas antigas
+    _requests[ip] = [t for t in _requests[ip] if t > window_start]
+
+    # Verificar limite
+    count = len(_requests[ip])
+    if count >= _RATE_LIMIT_MAX:
+        # Permitir burst curto
+        if count >= _RATE_LIMIT_BURST:
+            return False
+        # Se estourou o limite normal, verificar se passou tempo suficiente
+        if _requests[ip] and (now - _requests[ip][0]) < _RATE_LIMIT_WINDOW:
+            return False
+
+    _requests[ip].append(now)
+    return True
+
+
+def _validar_chaves() -> None:
+    """Valida que as chaves de API necessarias existem."""
+    obrigatorias = {
+        "API_KEY": "Google Gemini",
+    }
+    opcionais = {
+        "TMDB_API_KEY": "TMDB (posters, notas)",
+        "TMDB_READ_TOKEN": "TMDB (leitura)",
+        "TRAKT_CLIENT_ID": "Trakt (votos comunidade)",
+    }
+
+    faltando = []
+    for chave, nome in obrigatorias.items():
+        if not os.getenv(chave):
+            faltando.append(f"{chave} ({nome})")
+
+    if faltando:
+        logger.warning("Chaves obrigatorias faltando: %s", ", ".join(faltando))
+        logger.warning("A API nao funcionara corretamente sem essas chaves.")
+
+    for chave, nome in opcionais.items():
+        if not os.getenv(chave):
+            logger.info("Chave opcional %s (%s) nao configurada", chave, nome)
+
+
+# Validar chaves na inicializacao
+_validar_chaves()
 
 cliente_gemini: GeminiClient | None = None
 cliente_tmdb: TMDBClient | None = None
@@ -86,10 +155,39 @@ def get_trakt_client() -> TraktClient | None:
 
 @app.after_request
 def after_request(response: Response) -> Response:
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    origin = request.headers.get('Origin', '')
+    # Se a origin estiver na lista permitida, refletir; senao, usar a primeira
+    if origin in CORS_ORIGINS or '*' in CORS_ORIGINS:
+        response.headers.add('Access-Control-Allow-Origin', origin if origin else '*')
+    else:
+        response.headers.add('Access-Control-Allow-Origin', CORS_ORIGINS[0] if CORS_ORIGINS[0] else '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
     return response
+
+
+@app.before_request
+def before_request() -> Response | None:
+    """Rate limiting + log para todas as requisicoes."""
+    # Ignorar OPTIONS (preflight CORS)
+    if request.method == 'OPTIONS':
+        return None
+
+    ip = request.remote_addr or 'desconhecido'
+    logger.info("[%s] %s %s", ip, request.method, request.path)
+
+    # Aplicar rate limit apenas em endpoints da API
+    if request.path in ('/recomendar', '/dados'):
+        if not _check_rate_limit(ip):
+            logger.warning("[%s] Rate limit excedido", ip)
+            return jsonify({'erro': 'Muitas requisicoes. Tente novamente em alguns segundos.'}), 429
+
+    return None
+
+
+@app.errorhandler(413)
+def request_entity_too_large(_err: Any) -> tuple[Response, int]:
+    return jsonify({'erro': 'Requisicao muito grande. Limite de 1MB.'}), 413
 
 
 def _get_lang() -> str:
