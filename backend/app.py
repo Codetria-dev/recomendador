@@ -10,7 +10,7 @@ import time
 import traceback
 from typing import Any
 
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, request, jsonify, Response
 
 from src.gemini_client import GeminiClient, STREAMINGS, TIPOS_CONTEUDO, CRITERIOS
 from src.i18n import GENEROS
@@ -101,9 +101,9 @@ def _get_lang() -> str:
 
 
 @app.route('/')
-def index() -> str:
-    """Renderiza a interface web."""
-    return render_template('index.html')
+def index() -> tuple[Response, int]:
+    """Health check."""
+    return jsonify({"status": "ok", "app": "StreamRecomenda API"}), 200
 
 
 @app.route('/dados')

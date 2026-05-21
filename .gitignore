@@ -71,3 +71,6 @@ htmlcov/
 *.tmp
 *.bak
 *.swp
+
+# Reminder/Nitron project (separate)
+reminder/

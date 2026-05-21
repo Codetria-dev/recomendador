@@ -792,6 +792,7 @@
         </div>
     </footer>
 
+    <script src="config.js"></script>
     <script>
         // --- i18n System ---
         let currentLang = localStorage.getItem('lang') || 'pt';
@@ -807,7 +808,7 @@
 
         async function carregarIdioma(lang) {
             try {
-                const res = await fetch('/dados?lang=' + lang);
+                const res = await fetch(API_URL + '/dados?lang=' + lang);
                 const data = await res.json();
 
                 currentLang = data.lingua_atual;
@@ -1006,7 +1007,7 @@
             af.classList.add('active');
 
             try {
-                const res = await fetch('/recomendar', {
+                const res = await fetch(API_URL + '/recomendar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
